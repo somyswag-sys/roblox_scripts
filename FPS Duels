@@ -1,0 +1,300 @@
+-- Zennix HACK | Чистый Roblox GUI | Полностью рабочий 2025
+-- Просто вставь и наслаждайся
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UIS = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local LocalPlayer = Players.LocalPlayer
+
+-- Переменные
+local ESPEnabled = false
+local AimlockEnabled = false
+local MenuBind = Enum.KeyCode.LeftAlt
+local MenuVisible = false
+
+-- Главная GUI
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+ScreenGui.ResetOnSpawn = false
+
+-- Блюр + надпись при загрузке
+local Blur = Instance.new("BlurEffect", game.Lighting)
+Blur.Size = 0
+for i = 0, 24, 1 do
+    Blur.Size = i
+    wait(0.03)
+end
+
+local LoadText = Instance.new("TextLabel", ScreenGui)
+LoadText.Size = UDim2.new(0, 500, 0, 120)
+LoadText.Position = UDim2.new(0.5, -250, 0.4, -60)
+LoadText.BackgroundTransparency = 1
+LoadText.Text = "ZENNIX HACK"
+LoadText.TextColor3 = Color3.fromRGB(255, 255, 255)
+LoadText.TextStrokeTransparency = 0
+LoadText.TextStrokeColor3 = Color3.fromRGB(255, 0, 130)
+LoadText.Font = Enum.Font.GothamBlack
+LoadText.TextSize = 70
+LoadText.TextTransparency = 1
+
+for i = 0, 1, 0.1 do
+    LoadText.TextTransparency = 1 - i
+    wait(0.05)
+end
+wait(1.5)
+for i = 0, 1, 0.1 do
+    LoadText.TextTransparency = i
+    Blur.Size = 24 - (i * 24)
+    wait(0.05)
+end
+LoadText:Destroy()
+Blur:Destroy()
+
+-- Основное окно (закруглённое)
+local MainFrame = Instance.new("Frame", ScreenGui)
+MainFrame.Size = UDim2.new(0, 520, 0, 420)
+MainFrame.Position = UDim2.new(0.5, -260, 0.5, -210)
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+MainFrame.BorderSizePixel = 0
+MainFrame.Visible = false
+MainFrame.ClipsDescendants = true
+
+local Corner = Instance.new("UICorner", MainFrame)
+Corner.CornerRadius = UDim.new(0, 16)
+
+local Stroke = Instance.new("UIStroke", MainFrame)
+Stroke.Color = Color3.fromRGB(255, 0, 130)
+Stroke.Thickness = 2
+
+local Title = Instance.new("TextLabel", MainFrame)
+Title.Size = UDim2.new(1, -40, 0, 50)
+Title.Position = UDim2.new(0, 20, 0, 10)
+Title.BackgroundTransparency = 1
+Title.Text = "Zennix HACK"
+Title.TextColor3 = Color3.fromRGB(255, 0, 130)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 28
+Title.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Крестик закрытия
+local CloseBtn = Instance.new("TextButton", MainFrame)
+CloseBtn.Size = UDim2.new(0, 40, 0, 40)
+CloseBtn.Position = UDim2.new(1, -50, 0, 8)
+CloseBtn.BackgroundTransparency = 1
+CloseBtn.Text = "×"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.TextSize = 40
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.MouseButton1Click:Connect(function()
+    MenuVisible = false
+    MainFrame.Visible = false
+end)
+
+-- Вкладки
+local TabFrame = Instance.new("Frame", MainFrame)
+TabFrame.Size = UDim2.new(1, -20, 0, 35)
+TabFrame.Position = UDim2.new(0, 10, 0, 60)
+TabFrame.BackgroundTransparency = 1
+
+local MainTabBtn = Instance.new("TextButton", TabFrame)
+MainTabBtn.Size = UDim2.new(0, 100, 1, 0)
+MainTabBtn.Text = "Main"
+MainTabBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 130)
+MainTabBtn.TextColor3 = Color3.new(1,1,1)
+MainTabBtn.Font = Enum.Font.GothamBold
+
+local MiscTabBtn = Instance.new("TextButton", TabFrame)
+MiscTabBtn.Size = UDim2.new(0, 100, 1, 0)
+MiscTabBtn.Position = UDim2.new(0, 110, 0, 0)
+MiscTabBtn.Text = "Misc"
+MiscTabBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+MiscTabBtn.TextColor3 = Color3.new(1,1,1)
+MiscTabBtn.Font = Enum.Font.GothamBold
+
+-- Контейнеры вкладок
+local MainContainer = Instance.new("Frame", MainFrame)
+MainContainer.Size = UDim2.new(1, -40, 1, -120)
+MainContainer.Position = UDim2.new(0, 20, 0, 100)
+MainContainer.BackgroundTransparency = 1
+MainContainer.Visible = true
+
+local MiscContainer = Instance.new("Frame", MainFrame)
+MiscContainer.Size = UDim2.new(1, -40, 1, -120)
+MiscContainer.Position = UDim2.new(0, 20, 0, 100)
+MiscContainer.BackgroundTransparency = 1
+MiscContainer.Visible = false
+
+-- Функция создания красивого тумблера
+local function CreateToggle(parent, text, posY, callback)
+    local ToggleFrame = Instance.new("Frame", parent)
+    ToggleFrame.Size = UDim2.new(1, 0, 0, 50)
+    ToggleFrame.Position = UDim2.new(0, 0, 0, posY)
+    ToggleFrame.BackgroundTransparency = 1
+
+    local Label = Instance.new("TextLabel", ToggleFrame)
+    Label.Size = UDim2.new(0, 200, 1, 0)
+    Label.Text = text
+    Label.TextColor3 = Color3.new(1,1,1)
+    Label.BackgroundTransparency = 1
+    Label.Font = Enum.Font.Gotham
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+
+    local ToggleBtn = Instance.new("TextButton", ToggleFrame)
+    ToggleBtn.Size = UDim2.new(0, 60, 0, 30)
+    ToggleBtn.Position = UDim2.new(1, -70, 0.5, -15)
+    ToggleBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+    ToggleBtn.Text = ""
+    local btnCorner = Instance.new("UICorner", ToggleBtn)
+    btnCorner.CornerRadius = UDim.new(1, 0)
+
+    local Circle = Instance.new("Frame", ToggleBtn)
+    Circle.Size = UDim2.new(0, 26, 0, 26)
+    Circle.Position = UDim2.new(0, 4, 0.5, -13)
+    Circle.BackgroundColor3 = Color3.new(1,1,1)
+    local cirCorner = Instance.new("UICorner", Circle)
+    cirCorner.CornerRadius = UDim.new(1, 0)
+
+    local state = false
+    ToggleBtn.MouseButton1Click:Connect(function()
+        state = not state
+        TweenService:Create(ToggleBtn, TweenInfo.new(0.3), {BackgroundColor3 = state and Color3.fromRGB(255, 0, 130) or Color3.fromRGB(50, 50, 60)}):Play()
+        TweenService:Create(Circle, TweenInfo.new(0.3), {Position = state and UDim2.new(1, -30, 0.5, -13) or UDim2.new(0, 4, 0.5, -13)}):Play()
+        callback(state)
+    end)
+
+    return ToggleFrame
+end
+
+-- Тумблеры
+CreateToggle(MainContainer, "ESP Box", 20, function(v) ESPEnabled = v end)
+CreateToggle(MainContainer, "Aimlock (Hold RMB)", 80, function(v) AimlockEnabled = v end)
+
+-- Misc
+local BindLabel = Instance.new("TextLabel", MiscContainer)
+BindLabel.Size = UDim2.new(1, 0, 0, 50)
+BindLabel.Position = UDim2.new(0, 0, 0, 20)
+BindLabel.BackgroundTransparency = 1
+BindLabel.Text = "Бинд меню: LeftAlt"
+BindLabel.TextColor3 = Color3.new(1,1,1)
+BindLabel.Font = Enum.Font.Gotham
+
+-- Смена бинда
+local ChangeBindBtn = Instance.new("TextButton", MiscContainer)
+ChangeBindBtn.Size = UDim2.new(0, 200, 0, 50)
+ChangeBindBtn.Position = UDim2.new(0.5, -100, 0, 80)
+ChangeBindBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 130)
+ChangeBindBtn.Text = "Нажми и выбери новую клавишу"
+ChangeBindBtn.TextColor3 = Color3.new(1,1,1)
+ChangeBindBtn.Font = Enum.Font.GothamBold
+local btnC = Instance.new("UICorner", ChangeBindBtn)
+btnC.CornerRadius = UDim.new(0, 12)
+
+local waitingForKey = false
+ChangeBindBtn.MouseButton1Click:Connect(function()
+    waitingForKey = true
+    ChangeBindBtn.Text = "Нажми клавишу..."
+end)
+
+-- Переключение вкладок
+MainTabBtn.MouseButton1Click:Connect(function()
+    MainContainer.Visible = true MiscContainer.Visible = false
+    MainTabBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 130)
+    MiscTabBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+end)
+MiscTabBtn.MouseButton1Click:Connect(function()
+    MainContainer.Visible = false MiscContainer.Visible = true
+    MiscTabBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 130)
+    MainTabBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+end)
+
+-- === ESP ===
+local function CreateBoxESP(plr)
+    if plr == LocalPlayer then return end
+    local box = Drawing.new("Square")
+    box.Thickness = 2
+    box.Color = Color3.fromRGB(255, 0, 130)
+    box.Filled = false
+    box.Transparency = 1
+
+    local tracer = Drawing.new("Line")
+    tracer.Thickness = 2
+    tracer.Color = Color3.fromRGB(255, 0, 130)
+
+    RunService.RenderStepped:Connect(function()
+        if not ESPEnabled or not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") then
+            box.Visible = false
+            tracer.Visible = false
+            return
+        end
+        local root = plr.Character.HumanoidRootPart
+        local pos, onscreen = workspace.CurrentCamera:WorldToViewportPoint(root.Position)
+        if onscreen then
+            local size = (workspace.CurrentCamera:WorldToViewportPoint(root.Position + Vector3.new(0, 5, 0)).Y - workspace.CurrentCamera:WorldToViewportPoint(root.Position - Vector3.new(0, 5, 0)).Y) / 2
+            box.Size = Vector2.new(size * 2, size * 3)
+            box.Position = Vector2.new(pos.X - box.Size.X / 2, pos.Y - box.Size.Y / 2)
+            box.Visible = true
+
+            tracer.From = Vector2.new(workspace.CurrentCamera.ViewportSize.X / 2, workspace.CurrentCamera.ViewportSize.Y)
+            tracer.To = Vector2.new(pos.X, pos.Y)
+            tracer.Visible = true
+        else
+            box.Visible = false
+            tracer.Visible = false
+        end
+    end)
+end
+
+for _, plr in pairs(Players:GetPlayers()) do
+    if plr ~= LocalPlayer then CreateBoxESP(plr) end
+end
+Players.PlayerAdded:Connect(function(plr) CreateBoxESP(plr) end)
+
+-- === Aimlock ===
+local HoldingRMB = false
+UIS.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton2 then HoldingRMB = true end end)
+UIS.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton2 then HoldingRMB = false end end)
+
+RunService.RenderStepped:Connect(function()
+    if AimlockEnabled and HoldingRMB then
+        local closest = nil
+        local dist = 9999
+        for _, plr in pairs(Players:GetPlayers()) do
+            if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+                local root = plr.Character.HumanoidRootPart
+                local screenPos, onScreen = workspace.CurrentCamera:WorldToViewportPoint(root.Position)
+                if onScreen then
+                    local mag = (Vector2.new(mouse.X, mouse.Y) - Vector2.new(screenPos.X, screenPos.Y)).Magnitude
+                    if mag < dist then
+                        dist = mag
+                        closest = root
+                    end
+                end
+            end
+        end
+        if closest then
+            workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, closest.Position + closest.Velocity * 0.187)
+        end
+    end
+end)
+
+-- Управление меню
+UIS.InputBegan:Connect(function(key)
+    if waitingForKey and key.KeyCode ~= Enum.KeyCode.Unknown then
+        MenuBind = key.KeyCode
+        BindLabel.Text = "Бинд меню: " .. tostring(key.KeyCode):gsub("Enum.KeyCode.", "")
+        ChangeBindBtn.Text = "Бинд изменён!"
+        waitingForKey = false
+        wait(1)
+        ChangeBindBtn.Text = "Нажми и выбери новую клавишу"
+    elseif key.KeyCode == MenuBind then
+        MenuVisible = not MenuVisible
+        MainFrame.Visible = MenuVisible
+    end
+end)
+
+-- Уведомление
+game.StarterGui:SetCore("SendNotification", {
+    Title = "Zennix HACK";
+    Text = "Успешно загружен! LeftAlt - открыть";
+    Duration = 6;
+})
