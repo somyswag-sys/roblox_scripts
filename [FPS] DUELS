@@ -1,1 +1,268 @@
+-- Zennix HACK | 2025 | Красивая тёмная GUI с Fluxus Library
+-- Автор: по твоему заказу :)
 
+local Fluxus = loadstring(game:HttpGet("https://raw.githubusercontent.com/infinitylua/FluxusUI/main/fluxus.lua"))()
+
+-- Блюр при загрузке
+local Blur = Instance.new("BlurEffect", game.Lighting)
+Blur.Size = 0
+for i = 1, 24 do
+    Blur.Size = i
+    task.wait(0.05)
+end
+task.wait(0.5)
+
+-- Надпись ZENNIX HACK
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+local TextLabel = Instance.new("TextLabel", ScreenGui)
+TextLabel.Size = UDim2.new(0, 600, 0, 150)
+TextLabel.Position = UDim2.new(0.5, -300, 0.4, -75)
+TextLabel.BackgroundTransparency = 1
+TextLabel.Text = "ZENNIX HACK"
+TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TextLabel.TextScaled = true
+TextLabel.Font = Enum.Font.GothamBlack
+TextLabel.TextStrokeTransparency = 0
+TextLabel.TextStrokeColor3 = Color3.fromRGB(255, 0, 130)
+TextLabel.ZIndex = 10
+
+for i = 1, 10 do
+    TextLabel.TextTransparency = 1 - (i / 10)
+    task.wait(0.1)
+end
+task.wait(1.5)
+for i = 1, 10 do
+    TextLabel.TextTransparency = i / 10
+    task.wait(0.1)
+end
+task.wait(0.3)
+ScreenGui:Destroy()
+Blur:Destroy()
+
+-- Основное окно
+local Window = Fluxus:Window({
+    Title = "Zennix HACK",
+    Size = UDim2.new(0, 520, 0, 420),
+    Position = UDim2.new(0.5, -260, 0.5, -210),
+    Theme = "Dark",
+    RoundedCorners = true,
+    CloseCallback = function() end
+})
+
+-- Крестик (закрытие)
+Window:CloseButton({
+    Color = Color3.fromRGB(255, 255, 255),
+    HoverColor = Color3.fromRGB(255, 100, 100)
+})
+
+-- Вкладки
+local MainTab = Window:Tab("Main")
+local MiscTab = Window:Tab("Misc")
+
+-- Переменные для функций
+local ESPEnabled = false
+local AimlockEnabled = false
+local GuiBind = Enum.KeyCode.LeftAlt
+
+-- === ESP BOX (3D Box ESP с обводкой, работает на всех) ===
+local function CreateESP(player)
+    if player == game.Players.LocalPlayer then return end
+    if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then return end
+
+    local Box = Drawing.new("Square")
+    Box.Thickness = 2
+    Box.Filled = false
+    Box.Color = Color3.fromRGB(255, 0, 130)
+    Box.Transparency = 1
+
+    local HealthBarBG = Drawing.new("Square")
+    local HealthBar = Drawing.new("Square")
+
+    local Tracer = Drawing.new("Line")
+    Tracer.Thickness = 2
+    Tracer.Color = Color3.fromRGB(255, 0, 130)
+
+    local NameTag = Drawing.new("Text")
+    NameTag.Size = 16
+    NameTag.Center = true
+    NameTag.Outline = true
+    NameTag.Color = Color3.fromRGB(255, 255, 255)
+    NameTag.Font = 2
+
+    local function Update()
+        local connection
+        connection = game:GetService("RunService").RenderStepped:Connect(function()
+            if not ESPEnabled or not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") or not player.Character:FindFirstChild("Head") then
+                Box.Visible = false
+                HealthBar.Visible = false
+                HealthBarBG.Visible = false
+                Tracer.Visible = false
+                NameTag.Visible = false
+                if not player.Character then connection:Disconnect() end
+                return
+            end
+
+            local root = player.Character.HumanoidRootPart
+            local head = player.Character.Head
+            local hum = player.Character:FindFirstChild("Humanoid")
+            if not hum then return end
+
+            local rootPos, onScreen = workspace.CurrentCamera:WorldToViewportPoint(root.Position)
+            local headPos = workspace.CurrentCamera:WorldToViewportPoint(head.Position + Vector3.new(0, 1.5, 0))
+            local legPos = workspace.CurrentCamera:WorldToViewportPoint(root.Position - Vector3.new(0, 4, 0))
+
+            if onScreen then
+                local size = (headPos - legPos).Magnitude
+                Box.Size = Vector2.new(size / 1.5, size)
+                Box.Position = Vector2.new(rootPos.X - Box.Size.X / 2, rootPos.Y - Box.Size.Y / 2)
+                Box.Visible = true
+
+                -- Health bar
+                local health = hum.Health / hum.MaxHealth
+                HealthBarBG.Size = Vector2.new(4, Box.Size.Y)
+                HealthBarBG.Position = Vector2.new(Box.Position.X - 8, Box.Position.Y)
+                HealthBarBG.Color = Color3.fromRGB(0, 0, 0)
+                HealthBarBG.Transparency = 0.6
+                HealthBarBG.Visible = true
+
+                HealthBar.Size = Vector2.new(4, Box.Size.Y * health)
+                HealthBar.Position = Vector2.new(Box.Position.X - 8, Box.Position.Y + (Box.Size.Y * (1 - health)))
+                HealthBar.Color = Color3.fromRGB(255 - (health * 255), health * 255, 0)
+                HealthBar.Visible = true
+
+                -- Tracer
+                Tracer.From = Vector2.new(workspace.CurrentCamera.ViewportSize.X / 2, workspace.CurrentCamera.ViewportSize.Y)
+                Tracer.To = Vector2.new(rootPos.X, rootPos.Y)
+                Tracer.Visible = true
+
+                -- Name
+                NameTag.Text = player.Name
+                NameTag.Position = Vector2.new(rootPos.X, headPos.Y - 30)
+                NameTag.Visible = true
+            else
+                Box.Visible = false
+                HealthBar.Visible = false
+                HealthBarBG.Visible = false
+                Tracer.Visible = false
+                NameTag.Visible = false
+            end
+        end)
+    end
+
+    player.CharacterAdded:Connect(function()
+        task.wait(1)
+        Update()
+    end)
+
+    Update()
+end
+
+-- Применяем ESP ко всем
+for _, plr in ipairs(game.Players:GetPlayers()) do
+    if plr ~= game.Players.LocalPlayer then
+        CreateESP(plr)
+    end
+end
+
+game.Players.PlayerAdded:Connect(function(plr)
+    plr.CharacterAdded:Wait()
+    CreateESP(plr)
+end)
+
+-- === AIMLOCK ===
+local Camera = workspace.CurrentCamera
+local LocalPlayer = game.Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
+local RunService = game:GetService("RunService")
+local UIS = game:GetService("UserInputService")
+
+local AimlockActive = false
+local Holding = false
+
+local function GetNearestPlayer()
+    local nearest, dist = nil, math.huge
+    for _, plr in ipairs(game.Players:GetPlayers()) do
+        if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") and plr.Character:FindFirstChild("Humanoid") and plr.Character.Humanoid.Health > 0 then
+            local root = plr.Character.HumanoidRootPart
+            local screenPos, onScreen = Camera:WorldToViewportPoint(root.Position)
+            if onScreen then
+                local mag = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(screenPos.X, screenPos.Y)).Magnitude
+                if mag < dist and mag < 300 then
+                    dist = mag
+                    nearest = plr.Character
+                end
+            end
+        end
+    end
+    return nearest
+end
+
+local function StartAimlock()
+    if AimlockActive then return end
+    AimlockActive = true
+    spawn(function()
+        while AimlockActive do
+            if Holding and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                local target = GetNearestPlayer()
+                if target and target:FindFirstChild("HumanoidRootPart") then
+                    local future = target.HumanoidRootPart.Position + (target.HumanoidRootPart.Velocity * 0.187)
+                    Camera.CFrame = CFrame.new(Camera.CFrame.Position, future)
+                end
+            end
+            task.wait()
+        end
+    end)
+end
+
+UIS.InputBegan:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton2 then
+        Holding = true
+    end
+end)
+
+UIS.InputEnded:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton2 then
+        Holding = false
+    end
+end)
+
+-- === GUI Элементы ===
+
+MainTab:Toggle("ESP Box", false, {Rounded = true}, function(state)
+    ESPEnabled = state
+end)
+
+MainTab:Toggle("Aimlock (Hold RMB)", false, {Rounded = true}, function(state)
+    AimlockEnabled = state
+    if state then
+        StartAimlock()
+    else
+        AimlockActive = false
+    end
+end)
+
+MiscTab:Label("Keybind меню: Left Alt (по умолчанию)")
+MiscTab:Label("Нажми и удерживай Alt + клик по тумблеру для смены бинда")
+
+-- Смена бинда GUI
+local ChangingBind = false
+UIS.InputBegan:Connect(function(key)
+    if key.KeyCode == GuiBind and UIS:IsKeyDown(Enum.KeyCode.LeftAlt) then
+        Window:Toggle()
+    elseif ChangingBind and key.KeyCode ~= Enum.KeyCode.Unknown then
+        GuiBind = key.KeyCode
+        Fluxus:Notify("Zennix HACK", "Новый бинд меню: " .. tostring(key.KeyCode):sub(14))
+        ChangingBind = false
+    end
+end)
+
+MainTab:Keybind("Сменить бинд открытия", GuiBind, function(key)
+    Fluxus:Notify("Zennix HACK", "Нажми новую клавишу...")
+    ChangingBind = true
+end)
+
+-- Уведомление о загрузке
+Fluxus:Notify("Zennix HACK", "Успешно загружен! Приятной игры ♡", 6)
+
+-- Открытие по умолчанию
+Window:Toggle()
